@@ -21,13 +21,11 @@ def parse_input(args):
             script_name = args[0]
             user_prompt = args[1]
             flags = []
-            print(f"Prompt received: {user_prompt}")
             return user_prompt, flags
         case x if x > 2: #Prompt + flags
             script_name = args[0]
             user_prompt = args[1]
             flags = args[2:]
-            print(f"Prompt received: {user_prompt}\n------------------------------------------------------------------------------------\n")
             return user_prompt, flags
         case _: #default case, raise error
             raise Exception("Improper input...expecting: <scriptname.py> <'prompt'> <optional flags>")
@@ -43,7 +41,16 @@ messages = [
     types.Content(role="user", parts=[types.Part(text=user_prompt)]),
 ]
 
+#Call generate_content with message
 response = client.models.generate_content(model="gemini-2.0-flash-001",contents = messages)
-print(response.text)
-print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+
+#Check flags
+if "--verbose" in flags:
+    print(f"User prompt: {user_prompt}\n\n")
+    print(response.text)
+    print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+    print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+else:
+    print(response.text)
+
