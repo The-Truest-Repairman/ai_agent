@@ -3,9 +3,11 @@ import sys
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+
 from functions import *
 from prompts import system_prompt
 from call_function import available_functions, call_function
+from config import MAX_ITERS
 
 
 def main():
@@ -26,30 +28,27 @@ def main():
     #Check for proper inputs and parse arguments
     user_prompt, flags = parse_input(sys.argv)
   
-
     #List of user prompts to keep track for continuous conversation
     messages = [
         types.Content(role="user", parts=[types.Part(text=user_prompt)]),
     ]
     
-    ##################################################
-    #Call generate_content looped but
+    iters = 0
+    while True:
+        iters += 1
+        if iters > MAX_ITERS:
+            print(f"Maximum iterations ({MAX_ITERS}) reached.")
+            sys.exit(1)
+
+        try:
+            final_response = generate_content(client, messages, verbose)
+            if final_response:
+                if final_response.text:
+                    print(f"\n             **IMPORTANT MESSAGE FROM THE DEAN**\n\n{final_response.text}\n")
+                    break
+        except Exception as e:
+            print(f"Error in generate_content: {e}")
     
-    ###################################################
-
-   ##Handle responses function:
-   # def handle_response(response):
-   #     #Check for function calls and save them into new var
-   #    function_call_part = None
-   #    if response.function_calls:
-   #         function_call_part = response.function_calls[0]  # Get the first function call
-   #    for candidate in response.candidates:
-   #         #Build list of candidate responses and add it to our messages list
-   #         messages.append(candidate.content)
-
-    #handle_response(response)
-
-    generate_content(client, messages, verbose)
 
 def generate_content(client, messages, verbose):
     response = client.models.generate_content(
@@ -59,20 +58,23 @@ def generate_content(client, messages, verbose):
         tools=[available_functions], system_instruction=system_prompt
         )
     )
-    #Output to the terminal 
+
+    #Begin output to the terminal 
     if verbose:
         print(f"\nPrompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}\n")
-
-    # Handle function calls
-    if not response.function_calls:
-        return response.text
     
+    if response.candidates:
+        for candidate in response.candidates:
+            function_call_content = candidate.content
+            messages.append(function_call_content)
+
+    if not response.function_calls:
+        return response
+
     function_responses = []
     for function_call_part in response.function_calls:
         function_call_result = call_function(function_call_part, verbose)
-        #Append result.content to our messages list
-        messages.append(function_call_result.parts)
 
         if not function_call_result or not function_call_result.parts[0].function_response.response:
             raise Exception("Fatal Error: no function response")
@@ -81,11 +83,12 @@ def generate_content(client, messages, verbose):
             print(f"-> {function_call_result.parts[0].function_response.response}")
         
         function_responses.append(function_call_result.parts[0])
-        print(f"\n--------------RESPONSE----------------\n\n{response.text}\n")
-        print("--------END OF RESPONSE OUTPUT--------")
+        
     if not function_responses:
         raise Exception("no function responses generated, exiting")
-   
+    
+    messages.append(types.Content(role="tool", parts=function_responses))
+    return None
 
 if __name__ == "__main__":
     main()

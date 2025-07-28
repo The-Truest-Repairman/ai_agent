@@ -29,9 +29,9 @@ def call_function(function_call_part, verbose=False):
 
         # Print before calling
         if verbose:
-            print(f"Calling function: {function_name}({function_args})")
+            print(f"\nCalling function: {function_name}({function_args})")
         else:
-            print(f" - Calling function: {function_name}")
+            print(f"\n - Calling function: {function_name}")
 
         # Check if function exists and call it
         if function_name not in functions_list:
@@ -42,5 +42,5 @@ def call_function(function_call_part, verbose=False):
 
         return types.Content(
             role="tool",
-            parts=[types.Part.from_function_response(name=function_name, response=response_data)]
+            parts=[types.Part.from_function_response(name=function_name, response={"result": response_data})]
         ) 
