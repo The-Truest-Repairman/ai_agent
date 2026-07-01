@@ -1,0 +1,5 @@
+# Restore libCEC-only path: block Bazzite auto-inputattach on Pulse-Eight ttyACM.
+# /etc overrides /usr/lib; ENV{SYSTEMD_WANTS}="" prevents pulse8-cec-inputattach@ from starting.
+
+SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*", ATTRS{idVendor}=="2548", ATTRS{idProduct}=="1002", \
+  ENV{SYSTEMD_WANTS}="", ENV{ID_INPUT}="", SYMLINK+="cec0"
