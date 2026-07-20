@@ -1,0 +1,2 @@
+# Override Bazzite stale rule that called removed /usr/bin/cec-control onboot.
+# Intentionally empty of RUN commands.

@@ -1,0 +1,6 @@
+# Keep Pulse-Eight USB awake and world-readable for libCEC (original working perms).
+ACTION=="add|change", SUBSYSTEM=="usb", ATTR{idVendor}=="2548", ATTR{idProduct}=="1002", \
+  TEST=="power/wakeup", ATTR{power/wakeup}="enabled", ATTR{power/control}="on"
+
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="2548", ATTR{idProduct}=="1002", \
+  ATTR{power/wakeup}="enabled", MODE="0666"

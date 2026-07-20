@@ -1,0 +1,13 @@
+[Unit]
+Description=CEC Samsung Remote Bridge
+After=graphical-session.target
+Wants=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/bash %h/remote.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
